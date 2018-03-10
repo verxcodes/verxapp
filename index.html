@@ -24,6 +24,7 @@
     <!-- Add your site or application content here -->
     <video id="preview"></video>
     <textarea id="output"></textarea>
+    <textarea id="sigok"></textarea>
     <script src="js/instascan.min.js"></script>
     <script type="text/javascript">
 
@@ -47,9 +48,30 @@
         });
 
         function checkScan(content) {
-            $("#output").text(content);
+            var results = content.split(".");
+
+            var tokens = [];
+
+            var out = "";
+            var i, len;
+
+            for (i = 0; i < 2; ++i) {
+                tokens[i] = b64DecodeUnicode(results[i]);
+                out += tokens[i] + "\n";
+            }
+
+            tokens[2] = results[2];
+            out += tokens[2];
+
+            $("#output").text(out);
         };
 
+        function b64DecodeUnicode(str) {
+            // Going backwards: from bytestream, to percent-encoding, to original string.
+            return decodeURIComponent(atob(str).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
     </script>
 
     <script src="js/vendor/modernizr-3.5.0.min.js"></script>
