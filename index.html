@@ -22,10 +22,20 @@
         <![endif]-->
 
     <!-- Add your site or application content here -->
+
+    <script src="js/instascan.min.js"></script>
+    <script src='js/jsrsasign-all-min.js'></script>
+    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.2.1.min.js"><\/script>')</script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
     <video id="preview"></video>
     <textarea id="output"></textarea>
+    <textarea id="pubkey"></textarea>
     <textarea id="sigok"></textarea>
-    <script src="js/instascan.min.js"></script>
     <script type="text/javascript">
 
         let scanner = new Instascan.Scanner({
@@ -52,18 +62,44 @@
 
             var tokens = [];
 
-            var out = "";
             var i, len;
 
             for (i = 0; i < 2; ++i) {
-                tokens[i] = b64DecodeUnicode(results[i]);
-                out += tokens[i] + "\n";
+                if (i == 2) {
+                    tokens[2] = results[2];
+                } else {
+                    tokens[i] = b64DecodeUnicode(results[i]);
+                }
             }
 
             tokens[2] = results[2];
-            out += tokens[2];
 
-            $("#output").text(out);
+            $("#output").text(content);
+
+            var info = tokens[1];
+            var info_obj = JSON.parse(info);
+            var URL = info_obj['URL'];
+
+            var request = new XMLHttpRequest();
+            request.open('GET', URL);
+            request.responseType = 'text';
+
+            var sig = tokens[2];
+
+            $("#sigok").text(sig);
+
+            request.onload = function () {
+
+                $("#pubkey").text(request.response);
+
+                var pubkey = KEYUTIL.getKey(request.response);
+
+                var Validity = KJUR.jws.JWS.verifyJWT(content, pubkey, {alg: ['ES384']});
+
+                $("#sigok").text(Validity);
+
+            }
+            request.send();
         };
 
         function b64DecodeUnicode(str) {
@@ -72,15 +108,8 @@
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
         }
+
     </script>
-
-    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-        crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.2.1.min.js"><\/script>')</script>
-    <script src="js/plugins.js"></script>
-    <script src="js/main.js"></script>
-
 </body>
 
 </html>
