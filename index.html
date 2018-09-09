@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/verx.css">
 </head>
 
 <body>
@@ -33,10 +34,53 @@
     <script src="js/main.js"></script>
 
     <video id="preview"></video>
-    <textarea id="output"></textarea>
-    <textarea id="pubkey"></textarea>
-    <textarea id="sigok"></textarea>
+    <p>
+        <button id="sigok" class="styled">Unknown</button>
+    </p>
+
+    <table id="output" class="tg" border="1">
+        <tr>
+            <td class="outrow">Issuer's Public Key URL:</td>
+            <td id="pubkeyURL" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">Expiration:</td>
+            <td id="expiration" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">Product Code:</td>
+            <td id="prodcode" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">Batch:</td>
+            <td id="batch" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">Serial Number:</td>
+            <td id="sernum" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">UUID:</td>
+            <td id="uuid" class="outrow"></td>
+        </tr>
+        <tr>
+            <td class="outrow">Other Info:</td>
+            <td id="other" class="outrow"></td>
+        </tr>
+    </table>
+
+    <audio id="soundFX">
+        <source src="media/sounds/beep-03.wav"></source>
+    </audio>
+
+    <audio id="soundFX2">
+        <source src="media/sounds/bell-ringing-04.wav"></source>
+    </audio>
+
     <script type="text/javascript">
+
+        var soundFX = $('#soundFX');
+        var soundFX2 = $('#soundFX2');
 
         let scanner = new Instascan.Scanner({
             video: document.getElementById('preview'),
@@ -58,6 +102,9 @@
         });
 
         function checkScan(content) {
+
+            $("#sigok").css("background", "grey");
+
             var results = content.split(".");
 
             var tokens = [];
@@ -74,30 +121,46 @@
 
             tokens[2] = results[2];
 
-            $("#output").text(content);
+            // Token 0: JWT Header
+            // Token 1: JWT Payload
+            // Token 3: JWT Signature
 
-            var info = tokens[1];
-            var info_obj = JSON.parse(info);
-            var URL = info_obj['URL'];
+            var payload = JSON.parse(tokens[1]);
+            var URL = payload.URL;
 
             var request = new XMLHttpRequest();
             request.open('GET', URL);
             request.responseType = 'text';
 
-            var sig = tokens[2];
+            $("#pubkeyURL").text(payload.URL);
+            $("#expiration").text(payload.expires);
+            $("#prodcode").text(payload.prd);
+            $("#sernum").text(payload.ser);
+            $("#batch").text(payload.batch);
+            $("#uuid").text(payload.UUID);
+            $("#other").text(payload.other);
 
-            $("#sigok").text(sig);
+            var sig = tokens[2];
 
             request.onload = function () {
 
-                $("#pubkey").text(request.response);
-
                 var pubkey = KEYUTIL.getKey(request.response);
 
-                var Validity = KJUR.jws.JWS.verifyJWT(content, pubkey, {alg: ['ES384']});
+                var Validity = KJUR.jws.JWS.verifyJWT(content, pubkey, { alg: ['ES384'] });
 
-                $("#sigok").text(Validity);
-
+                if (Validity === true) {
+                    $("#sigok").css("background", "green");
+                    $("#sigok").text("Valid Code!");
+                    $('#pubkeyURL').css("background", "green");
+                    $('#pubkeyURL').css("color", "white");
+                    soundFX2[0].play();
+                } else {
+                    $("#sigok").css("background", "red");
+                    $("#sigok").text("Invalid!!!");
+                    $('#pubkeyURL').css("background", "white");
+                    $('#pubkeyURL').css("color", "black");
+                    soundFX[0].play();
+                }
             }
             request.send();
         };
