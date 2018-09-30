@@ -1,0 +1,76 @@
+[debug] [2018-09-30T13:53:04.763Z] ----------------------------------------------------------------------
+[debug] [2018-09-30T13:53:04.765Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Frank Davidson\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy
+[debug] [2018-09-30T13:53:04.766Z] CLI Version:   4.2.1
+[debug] [2018-09-30T13:53:04.766Z] Platform:      win32
+[debug] [2018-09-30T13:53:04.766Z] Node Version:  v6.11.1
+[debug] [2018-09-30T13:53:04.766Z] Time:          Sun Sep 30 2018 09:53:04 GMT-0400 (Eastern Daylight Time)
+[debug] [2018-09-30T13:53:04.766Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-09-30T13:53:04.832Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-09-30T13:53:04.833Z] > authorizing via signed-in user
+[debug] [2018-09-30T13:53:04.836Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-09-30T13:53:04.836Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+
+[debug] [2018-09-30T13:53:05.273Z] <<< HTTP RESPONSE 200
+[debug] [2018-09-30T13:53:05.289Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/verx-199115  
+ 
+[debug] [2018-09-30T13:53:05.802Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'verx-199115'...
+[info] 
+[info] i  deploying hosting
+[debug] [2018-09-30T13:53:05.811Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/verx-199115/versions  
+
+[debug] [2018-09-30T13:53:16.092Z] <<< HTTP RESPONSE 503
+[debug] [2018-09-30T13:53:16.092Z] <<< HTTP RESPONSE BODY
+[error] 
+[error] Error: HTTP Error: 503, The service is currently unavailable.
+[debug] [2018-09-30T13:53:16.434Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 503,
+      "message": "The service is currently unavailable.",
+      "status": "UNAVAILABLE"
+    }
+  },
+  "response": {
+    "statusCode": 503,
+    "body": {
+      "error": {
+        "code": 503,
+        "message": "The service is currently unavailable.",
+        "status": "UNAVAILABLE"
+      }
+    },
+    "headers": {
+      "vary": "X-Origin, Referer, Origin,Accept-Encoding",
+      "content-type": "application/json; charset=UTF-8",
+      "date": "Sun, 30 Sep 2018 13:53:16 GMT",
+      "server": "ESF",
+      "cache-control": "private",
+      "x-xss-protection": "1; mode=block",
+      "x-frame-options": "SAMEORIGIN",
+      "x-content-type-options": "nosniff",
+      "alt-svc": "quic=\":443\"; ma=2592000; v=\"44,43,39,35\"",
+      "accept-ranges": "none",
+      "connection": "close"
+    },
+    "request": {
+      "uri": {
+        "protocol": "https:",
+        "slashes": true,
+        "auth": null,
+        "host": "firebasehosting.googleapis.com",
+        "port": 443,
+        "hostname": "firebasehosting.googleapis.com",
+        "hash": null,
+        "search": null,
+        "query": null,
+        "pathname": "/v1beta1/sites/verx-199115/versions",
+        "path": "/v1beta1/sites/verx-199115/versions",
+        "href": "https://firebasehosting.googleapis.com/v1beta1/sites/verx-199115/versions"
+      },
+      "method": "POST"
+    }
+  }
+}

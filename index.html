@@ -1,0 +1,177 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Verx Code Scanner</title>
+    <meta name="description" content="The Verx code scanner application.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/verx.css">
+</head>
+
+<body>
+    <!--[if lte IE 9]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+        <![endif]-->
+
+    <!-- Add your site or application content here -->
+
+    <script src="js/instascan.min.js"></script>
+    <script src='js/jsrsasign-all-min.js'></script>
+    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.2.1.min.js"><\/script>')</script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <div style="margin: 0 auto;"><video height="350px" playsinline id="preview"></video></div>
+    <div style="margin: 0 auto;"><button id="sigok" class="styled" style="display: block;">Unknown</button></div>
+    <div style="margin: 0 auto;">
+        <table id="output" class="tg" border="1" style="display: block;">
+            <tr>
+                <td class="outrow">Issuer's Public Key URL:</td>
+                <td id="pubkeyURL" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">Expiration:</td>
+                <td id="expiration" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">Product Code:</td>
+                <td id="prodcode" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">Batch:</td>
+                <td id="batch" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">Serial Number:</td>
+                <td id="sernum" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">UUID:</td>
+                <td id="uuid" class="outrow"></td>
+            </tr>
+            <tr>
+                <td class="outrow">Other Info:</td>
+                <td id="other" class="outrow"></td>
+            </tr>
+        </table>
+    </div>
+
+    <audio id="soundFX" preload="auto">
+        <source src="media/sounds/beep-03.wav">
+    </audio>
+
+    <audio id="soundFX2" preload="auto">
+        <source src="media/sounds/bell-ringing-04.wav">
+    </audio>
+
+    <script type="text/javascript">
+
+        var soundFX = $('#soundFX');
+        var soundFX2 = $('#soundFX2');
+
+        let scanner = new Instascan.Scanner({
+            video: document.getElementById('preview')
+        });
+
+        scanner.addListener('scan', function (content) {
+            checkScan(content);
+        });
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+
+        function checkScan(content) {
+
+            $("#sigok").css("background", "grey");
+
+            var results = content.split(".");
+
+            var tokens = [];
+
+            var i, len;
+
+            for (i = 0; i < 2; ++i) {
+                if (i == 2) {
+                    tokens[2] = results[2];
+                } else {
+                    tokens[i] = b64DecodeUnicode(results[i]);
+                }
+            }
+
+            tokens[2] = results[2];
+
+            // Token 0: JWT Header
+            // Token 1: JWT Payload
+            // Token 3: JWT Signature
+
+            var payload = JSON.parse(tokens[1]);
+            var URL = payload.URL;
+
+            var request = new XMLHttpRequest();
+            request.open('GET', URL);
+            request.responseType = 'text';
+
+            $("#pubkeyURL").text(payload.URL);
+            $("#expiration").text(payload.expires);
+            $("#prodcode").text(payload.prd);
+            $("#sernum").text(payload.ser);
+            $("#batch").text(payload.batch);
+            $("#uuid").text(payload.UUID);
+            $("#other").text(payload.other);
+
+            var sig = tokens[2];
+
+            request.onload = function () {
+
+                var pubkey = KEYUTIL.getKey(request.response);
+
+                var Validity = KJUR.jws.JWS.verifyJWT(content, pubkey, { alg: ['ES384'] });
+
+                if (Validity === true) {
+                    $("#sigok").css("background", "green");
+                    $("#sigok").text("Valid Code!");
+                    $('#pubkeyURL').css("background", "green");
+                    $('#pubkeyURL').css("color", "white");
+                    soundFX2[0].play();
+                } else {
+                    $("#sigok").css("background", "red");
+                    $("#sigok").text("Invalid!!!");
+                    $('#pubkeyURL').css("background", "white");
+                    $('#pubkeyURL').css("color", "black");
+                    soundFX[0].play();
+                }
+            }
+            request.send();
+        };
+
+        function b64DecodeUnicode(str) {
+            // Going backwards: from bytestream, to percent-encoding, to original string.
+            return decodeURIComponent(atob(str).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
+    </script>
+</body>
+
+</html>
